@@ -1,7 +1,0 @@
-任务质量分析报告 - RETAIL
-================================================================================
-
-原始任务数量: 114
-增强任务数量: 300
-
-Error calling GPT API: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}

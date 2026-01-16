@@ -208,7 +208,7 @@ def _create_dummy_runs(task_ids: list[str]) -> list:
             start_time=now,
             end_time=now,
             duration=1.0,
-            termination_reason=TerminationReason.TASK_FINISHED,
+            termination_reason=TerminationReason.AGENT_STOP,
             messages=[
                 UserMessage(role="user", content="Hello, I need help with my booking."),
                 AssistantMessage(role="assistant", content="I'd be happy to help you with your booking. Could you please provide your booking reference number?"),
