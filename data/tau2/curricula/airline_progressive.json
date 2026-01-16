@@ -1,0 +1,216 @@
+{
+  "curriculum_id": "airline_progressive_v1",
+  "curriculum_name": "Airline Progressive Learning",
+  "description": "Progressive continual learning curriculum for airline domain. Introduces tools in stages from basic queries to complex modifications.",
+  "domain": "airline",
+  "curriculum_type": "progressive",
+
+  "stages": [
+    {
+      "stage_id": "stage_0_foundation",
+      "stage_name": "Foundation - Basic Queries",
+      "available_tools": [
+        "get_user_details",
+        "get_reservation_details",
+        "list_all_airports"
+      ],
+      "new_tools": [
+        "get_user_details",
+        "get_reservation_details",
+        "list_all_airports"
+      ],
+      "changed_tools": [],
+      "removed_tools": [],
+      "learning_tasks": ["1", "5", "6"],
+      "eval_tasks": ["0", "3", "4"],
+      "retention_tasks": [],
+      "learning_materials": [
+        {
+          "material_type": "documentation",
+          "content": "## Tool: get_user_details\n\nRetrieves detailed information about a user.\n\n**Parameters:**\n- user_id (str): The unique identifier of the user\n\n**Returns:**\n- User profile including name, email, membership status, reservations, and payment methods\n\n**Usage Notes:**\n- Always verify user identity before making changes\n- Check membership status for applicable benefits",
+          "tool_names": ["get_user_details"],
+          "difficulty": 1,
+          "title": "User Details Tool"
+        },
+        {
+          "material_type": "documentation",
+          "content": "## Tool: get_reservation_details\n\nRetrieves detailed information about a flight reservation.\n\n**Parameters:**\n- reservation_id (str): The unique identifier of the reservation\n\n**Returns:**\n- Reservation details including flights, passengers, payment info, and status\n\n**Usage Notes:**\n- Use this to verify reservation status before modifications\n- Check cabin class for applicable policies",
+          "tool_names": ["get_reservation_details"],
+          "difficulty": 1,
+          "title": "Reservation Details Tool"
+        },
+        {
+          "material_type": "example",
+          "content": "User: I need to check my reservation status.\n\nAssistant: I'd be happy to help you check your reservation. Could you please provide your user ID or email so I can look up your account?\n\nUser: My user ID is john_doe_123.\n\nAssistant: [Tool Call: get_user_details(user_id='john_doe_123')]\n\n[Tool Result: {name: 'John Doe', reservations: ['RES001', 'RES002'], ...}]\n\nAssistant: I found your account, John. You have 2 reservations. Which one would you like me to check?\n\nUser: RES001 please.\n\nAssistant: [Tool Call: get_reservation_details(reservation_id='RES001')]\n\n[Tool Result: {status: 'confirmed', flights: [...], ...}]\n\nAssistant: Your reservation RES001 is confirmed. Here are the details...",
+          "tool_names": ["get_user_details", "get_reservation_details"],
+          "difficulty": 1,
+          "title": "Basic Query Example"
+        }
+      ],
+      "num_learning_trials": 3,
+      "num_eval_trials": 4,
+      "min_pass_rate": 0.5,
+      "prerequisites": []
+    },
+    {
+      "stage_id": "stage_1_search",
+      "stage_name": "Search Expansion",
+      "available_tools": [
+        "get_user_details",
+        "get_reservation_details",
+        "list_all_airports",
+        "search_direct_flight",
+        "search_onestop_flight"
+      ],
+      "new_tools": [
+        "search_direct_flight",
+        "search_onestop_flight"
+      ],
+      "changed_tools": [],
+      "removed_tools": [],
+      "learning_tasks": ["8", "9"],
+      "eval_tasks": ["7", "10", "11"],
+      "retention_tasks": ["0", "1", "3"],
+      "learning_materials": [
+        {
+          "material_type": "documentation",
+          "content": "## Tool: search_direct_flight\n\nSearches for direct (non-stop) flights between two airports.\n\n**Parameters:**\n- origin (str): Origin airport code (e.g., 'JFK')\n- destination (str): Destination airport code (e.g., 'LAX')\n- date (str): Flight date in 'YYYY-MM-DD' format\n\n**Returns:**\n- List of available direct flights with flight numbers, times, prices, and seat availability\n\n**Usage Notes:**\n- Always verify airport codes using list_all_airports if unsure\n- Check seat availability before booking",
+          "tool_names": ["search_direct_flight"],
+          "difficulty": 2,
+          "title": "Direct Flight Search"
+        },
+        {
+          "material_type": "documentation",
+          "content": "## Tool: search_onestop_flight\n\nSearches for one-stop (connecting) flights between two airports.\n\n**Parameters:**\n- origin (str): Origin airport code\n- destination (str): Destination airport code\n- date (str): Flight date in 'YYYY-MM-DD' format\n\n**Returns:**\n- List of available connecting flights with connection details\n\n**Usage Notes:**\n- Consider layover times when recommending flights\n- One-stop flights may be cheaper but take longer",
+          "tool_names": ["search_onestop_flight"],
+          "difficulty": 2,
+          "title": "One-Stop Flight Search"
+        },
+        {
+          "material_type": "example",
+          "content": "User: I want to fly from New York to Los Angeles on March 15th.\n\nAssistant: I'll search for flights from New York to Los Angeles on March 15th. Let me check both direct and connecting options.\n\n[Tool Call: search_direct_flight(origin='JFK', destination='LAX', date='2024-03-15')]\n\n[Tool Result: [{flight_id: 'FL001', departure: '08:00', arrival: '11:30', price: 350}, ...]]\n\nAssistant: I found several direct flights. The earliest departs at 8:00 AM and arrives at 11:30 AM local time for $350. Would you like me to also check connecting flights for potentially lower prices?",
+          "tool_names": ["search_direct_flight"],
+          "difficulty": 2,
+          "title": "Flight Search Example"
+        }
+      ],
+      "num_learning_trials": 3,
+      "num_eval_trials": 4,
+      "min_pass_rate": 0.5,
+      "prerequisites": ["stage_0_foundation"]
+    },
+    {
+      "stage_id": "stage_2_booking",
+      "stage_name": "Booking Operations",
+      "available_tools": [
+        "get_user_details",
+        "get_reservation_details",
+        "list_all_airports",
+        "search_direct_flight",
+        "search_onestop_flight",
+        "book_reservation",
+        "cancel_reservation"
+      ],
+      "new_tools": [
+        "book_reservation",
+        "cancel_reservation"
+      ],
+      "changed_tools": [],
+      "removed_tools": [],
+      "learning_tasks": ["14", "20"],
+      "eval_tasks": ["23", "24", "25", "35"],
+      "retention_tasks": ["1", "7", "10"],
+      "learning_materials": [
+        {
+          "material_type": "documentation",
+          "content": "## Tool: book_reservation\n\nCreates a new flight reservation.\n\n**Parameters:**\n- user_id (str): User ID\n- origin (str): Origin airport\n- destination (str): Destination airport\n- flight_type (str): 'one_way' or 'round_trip'\n- cabin (str): 'basic_economy', 'economy', or 'business'\n- flights (list): List of flight details\n- passengers (list): List of passenger information\n- payment_methods (list): Payment method details\n- total_baggages (int): Total baggage count\n- nonfree_baggages (int): Paid baggage count\n- insurance (str): 'yes' or 'no'\n\n**Key Constraints:**\n- Payment amount must equal total price\n- Verify seat availability before booking\n- Certificate and gift cards can be used for payment",
+          "tool_names": ["book_reservation"],
+          "difficulty": 3,
+          "title": "Booking Tool"
+        },
+        {
+          "material_type": "documentation",
+          "content": "## Tool: cancel_reservation\n\nCancels an existing reservation.\n\n**Parameters:**\n- reservation_id (str): The reservation to cancel\n\n**Returns:**\n- Cancellation confirmation and refund information\n\n**Policy Notes:**\n- Basic economy tickets cannot be cancelled\n- Cancellation within 24 hours of booking is free\n- Check insurance status for refund eligibility",
+          "tool_names": ["cancel_reservation"],
+          "difficulty": 2,
+          "title": "Cancellation Tool"
+        }
+      ],
+      "num_learning_trials": 3,
+      "num_eval_trials": 4,
+      "min_pass_rate": 0.5,
+      "prerequisites": ["stage_1_search"]
+    },
+    {
+      "stage_id": "stage_3_advanced",
+      "stage_name": "Advanced Modifications",
+      "available_tools": [
+        "get_user_details",
+        "get_reservation_details",
+        "list_all_airports",
+        "search_direct_flight",
+        "search_onestop_flight",
+        "book_reservation",
+        "cancel_reservation",
+        "update_reservation_flights",
+        "update_reservation_baggages",
+        "update_reservation_passengers",
+        "send_certificate",
+        "calculate"
+      ],
+      "new_tools": [
+        "update_reservation_flights",
+        "update_reservation_baggages",
+        "update_reservation_passengers",
+        "send_certificate",
+        "calculate"
+      ],
+      "changed_tools": [],
+      "removed_tools": [],
+      "learning_tasks": ["2", "12", "15"],
+      "eval_tasks": ["42", "44"],
+      "retention_tasks": ["0", "7", "14", "23"],
+      "learning_materials": [
+        {
+          "material_type": "documentation",
+          "content": "## Tool: update_reservation_flights\n\nModifies flights in an existing reservation.\n\n**Parameters:**\n- reservation_id (str): Reservation to modify\n- cabin (str): New cabin class\n- flights (list): New flight details\n- payment_methods (list): Payment for changes\n\n**Policy Notes:**\n- Basic economy cannot be modified\n- Price difference must be paid\n- Downgrades may result in refund",
+          "tool_names": ["update_reservation_flights"],
+          "difficulty": 3,
+          "title": "Flight Modification"
+        },
+        {
+          "material_type": "documentation",
+          "content": "## Tool: send_certificate\n\nSends a compensation certificate to a user.\n\n**Parameters:**\n- user_id (str): User to receive certificate\n- amount (int): Certificate amount in dollars\n\n**Usage Notes:**\n- Used for flight delays, cancellations, or service issues\n- Verify user membership status for eligibility\n- Document reason for compensation",
+          "tool_names": ["send_certificate"],
+          "difficulty": 2,
+          "title": "Certificate Tool"
+        },
+        {
+          "material_type": "documentation",
+          "content": "## Tool: calculate\n\nPerforms mathematical calculations.\n\n**Parameters:**\n- expression (str): Mathematical expression to evaluate\n\n**Usage Notes:**\n- Use for price calculations, refund amounts, etc.\n- Supports basic arithmetic operations",
+          "tool_names": ["calculate"],
+          "difficulty": 1,
+          "title": "Calculator Tool"
+        }
+      ],
+      "num_learning_trials": 3,
+      "num_eval_trials": 4,
+      "min_pass_rate": 0.5,
+      "prerequisites": ["stage_2_booking"]
+    }
+  ],
+
+  "evaluation_config": {
+    "metrics": [
+      "forward_transfer",
+      "backward_transfer",
+      "forgetting",
+      "learning_efficiency",
+      "tool_composition_generalization",
+      "parameter_generalization"
+    ],
+    "compute_pass_k": true,
+    "max_k": 4,
+    "baseline_type": "zero_doc"
+  }
+}

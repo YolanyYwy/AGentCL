@@ -1,0 +1,40 @@
+{
+  "curriculum_id": "airline_simple_test",
+  "curriculum_name": "Simple Test for Airline",
+  "curriculum_type": "progressive",
+  "domain": "airline",
+  "description": "Simple sequential learning for airline domain",
+  "stages": [
+    {
+      "stage_id": "0",
+      "stage_name": "airline_stage",
+      "available_tools": [
+        "get_user_details",
+        "calculate",
+        "update_reservation_baggages",
+        "search_direct_flight",
+        "cancel_reservation",
+        "get_reservation_details"
+      ],
+      "new_tools": [
+        "get_user_details",
+        "calculate",
+        "update_reservation_baggages",
+        "search_direct_flight",
+        "cancel_reservation",
+        "get_reservation_details"
+      ],
+      "learning_tasks": [
+        "57",
+        "12",
+        "140"
+      ],
+      "eval_tasks": [
+        "125",
+        "114"
+      ]
+    }
+  ],
+  "total_tasks": 5,
+  "total_tools": 6
+}

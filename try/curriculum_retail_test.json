@@ -1,0 +1,50 @@
+{
+  "curriculum_id": "retail_simple_test",
+  "curriculum_name": "Simple Test for Retail",
+  "curriculum_type": "progressive",
+  "domain": "retail",
+  "description": "Simple sequential learning for retail domain",
+  "stages": [
+    {
+      "stage_id": "0",
+      "stage_name": "retail_stage",
+      "available_tools": [
+        "modify_pending_order_items",
+        "find_user_id_by_email",
+        "get_user_details",
+        "calculate",
+        "transfer_to_human_agents",
+        "return_delivered_order_items",
+        "find_user_id_by_name_zip",
+        "get_order_details",
+        "cancel_pending_order",
+        "exchange_delivered_order_items",
+        "get_product_details"
+      ],
+      "new_tools": [
+        "modify_pending_order_items",
+        "find_user_id_by_email",
+        "get_user_details",
+        "calculate",
+        "transfer_to_human_agents",
+        "return_delivered_order_items",
+        "find_user_id_by_name_zip",
+        "get_order_details",
+        "cancel_pending_order",
+        "exchange_delivered_order_items",
+        "get_product_details"
+      ],
+      "learning_tasks": [
+        "57",
+        "12",
+        "140"
+      ],
+      "eval_tasks": [
+        "125",
+        "114"
+      ]
+    }
+  ],
+  "total_tasks": 5,
+  "total_tools": 11
+}

@@ -1,0 +1,125 @@
+{
+  "curriculum_id": "simple_sequential_test",
+  "curriculum_name": "Simple Sequential Test (Airline → Retail → Telecom)",
+  "curriculum_type": "cross_domain",
+  "domain": "multi_domain",
+  "description": "Sequential learning without continual learning methods",
+  "stages": [
+    {
+      "stage_id": "0",
+      "stage_name": "airline",
+      "domain": "airline",
+      "available_tools": [
+        "update_reservation_baggages",
+        "get_reservation_details",
+        "calculate",
+        "cancel_reservation",
+        "get_user_details",
+        "search_direct_flight"
+      ],
+      "new_tools": [
+        "update_reservation_baggages",
+        "get_reservation_details",
+        "calculate",
+        "cancel_reservation",
+        "get_user_details",
+        "search_direct_flight"
+      ],
+      "learning_tasks": [
+        "57",
+        "12",
+        "140"
+      ],
+      "eval_tasks": [
+        "125",
+        "114"
+      ]
+    },
+    {
+      "stage_id": "1",
+      "stage_name": "retail",
+      "domain": "retail",
+      "available_tools": [
+        "return_delivered_order_items",
+        "transfer_to_human_agents",
+        "find_user_id_by_name_zip",
+        "cancel_pending_order",
+        "find_user_id_by_email",
+        "exchange_delivered_order_items",
+        "modify_pending_order_items",
+        "get_order_details",
+        "calculate",
+        "get_user_details",
+        "get_product_details"
+      ],
+      "new_tools": [
+        "return_delivered_order_items",
+        "transfer_to_human_agents",
+        "find_user_id_by_name_zip",
+        "cancel_pending_order",
+        "find_user_id_by_email",
+        "exchange_delivered_order_items",
+        "modify_pending_order_items",
+        "get_order_details",
+        "calculate",
+        "get_user_details",
+        "get_product_details"
+      ],
+      "learning_tasks": [
+        "57",
+        "12",
+        "140"
+      ],
+      "eval_tasks": [
+        "125",
+        "114"
+      ]
+    },
+    {
+      "stage_id": "2",
+      "stage_name": "telecom",
+      "domain": "telecom",
+      "available_tools": [
+        "set_network_mode_preference",
+        "enable_roaming",
+        "reboot_device",
+        "reset_apn_settings",
+        "reseat_sim_card",
+        "disconnect_vpn",
+        "toggle_data_saver_mode",
+        "toggle_airplane_mode",
+        "toggle_data",
+        "refuel_data",
+        "grant_app_permission",
+        "toggle_wifi_calling",
+        "toggle_roaming"
+      ],
+      "new_tools": [
+        "set_network_mode_preference",
+        "enable_roaming",
+        "reboot_device",
+        "reset_apn_settings",
+        "reseat_sim_card",
+        "disconnect_vpn",
+        "toggle_data_saver_mode",
+        "toggle_airplane_mode",
+        "toggle_data",
+        "refuel_data",
+        "grant_app_permission",
+        "toggle_wifi_calling",
+        "toggle_roaming"
+      ],
+      "learning_tasks": [
+        "[mms_issue]break_app_both_permissions|data_mode_off|data_usage_exceeded[PERSONA:Hard]",
+        "[mobile_data_issue]bad_network_preference|bad_vpn|data_saver_mode_on[PERSONA:Easy]",
+        "[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|data_mode_off|user_abroad_roaming_enabled_off[PERSONA:Easy]"
+      ],
+      "eval_tasks": [
+        "[mms_issue]airplane_mode_on|bad_wifi_calling|data_mode_off|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Easy]",
+        "[mms_issue]break_apn_mms_setting|break_app_sms_permission|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:Easy]"
+      ]
+    }
+  ],
+  "total_tasks": 15,
+  "total_tools": 28
+}

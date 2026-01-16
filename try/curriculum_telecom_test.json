@@ -1,0 +1,54 @@
+{
+  "curriculum_id": "telecom_simple_test",
+  "curriculum_name": "Simple Test for Telecom",
+  "curriculum_type": "progressive",
+  "domain": "telecom",
+  "description": "Simple sequential learning for telecom domain",
+  "stages": [
+    {
+      "stage_id": "0",
+      "stage_name": "telecom_stage",
+      "available_tools": [
+        "enable_roaming",
+        "refuel_data",
+        "reseat_sim_card",
+        "reset_apn_settings",
+        "toggle_roaming",
+        "toggle_data",
+        "toggle_airplane_mode",
+        "toggle_data_saver_mode",
+        "reboot_device",
+        "grant_app_permission",
+        "set_network_mode_preference",
+        "disconnect_vpn",
+        "toggle_wifi_calling"
+      ],
+      "new_tools": [
+        "enable_roaming",
+        "refuel_data",
+        "reseat_sim_card",
+        "reset_apn_settings",
+        "toggle_roaming",
+        "toggle_data",
+        "toggle_airplane_mode",
+        "toggle_data_saver_mode",
+        "reboot_device",
+        "grant_app_permission",
+        "set_network_mode_preference",
+        "disconnect_vpn",
+        "toggle_wifi_calling"
+      ],
+      "learning_tasks": [
+        "[mms_issue]break_app_both_permissions|data_mode_off|data_usage_exceeded[PERSONA:Hard]",
+        "[mobile_data_issue]bad_network_preference|bad_vpn|data_saver_mode_on[PERSONA:Easy]",
+        "[mms_issue]airplane_mode_on|bad_network_preference|bad_wifi_calling|data_mode_off|user_abroad_roaming_enabled_off[PERSONA:Easy]"
+      ],
+      "eval_tasks": [
+        "[mms_issue]airplane_mode_on|bad_wifi_calling|data_mode_off|unseat_sim_card|user_abroad_roaming_disabled_off[PERSONA:Easy]",
+        "[mms_issue]break_apn_mms_setting|break_app_sms_permission|data_usage_exceeded|user_abroad_roaming_enabled_off[PERSONA:Easy]"
+      ]
+    }
+  ],
+  "total_tasks": 5,
+  "total_tools": 13
+}
