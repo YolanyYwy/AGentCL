@@ -1,15 +1,3 @@
-"""
-Example script for running GRPO-based continual learning.
-
-This script demonstrates how to:
-1. Train a model sequentially across 3 domains
-2. Use GRPO for online policy optimization (update after each experience)
-3. Evaluate the model on each domain
-
-Usage:
-    python run_grpo_continual_learning.py --domains airline retail telecom
-    python run_grpo_continual_learning.py --model gpt2 --device cpu  # For testing
-"""
 
 import argparse
 import json
@@ -70,6 +58,7 @@ def create_domain_curriculum(
     return Curriculum(
         curriculum_id="grpo_sequential_domains",
         curriculum_name="GRPO Sequential Domain Training",
+        domain=domains[0],  # Primary domain
         stages=stages,
         description="Train sequentially across multiple domains using GRPO",
     )
@@ -205,13 +194,21 @@ def _create_dummy_tasks(domains: list[str]) -> list[Task]:
 
 def _create_dummy_runs(task_ids: list[str]) -> list:
     """Create dummy simulation runs for demonstration."""
-    from tau2.data_model.simulation import SimulationRun, RewardInfo
+    from tau2.data_model.simulation import SimulationRun, RewardInfo, TerminationReason
     from tau2.data_model.message import UserMessage, AssistantMessage
+    import uuid
+    from datetime import datetime
 
     runs = []
     for task_id in task_ids:
+        now = datetime.now().isoformat()
         run = SimulationRun(
+            id=str(uuid.uuid4()),
             task_id=task_id,
+            start_time=now,
+            end_time=now,
+            duration=1.0,
+            termination_reason=TerminationReason.TASK_FINISHED,
             messages=[
                 UserMessage(role="user", content="Hello, I need help with my booking."),
                 AssistantMessage(role="assistant", content="I'd be happy to help you with your booking. Could you please provide your booking reference number?"),

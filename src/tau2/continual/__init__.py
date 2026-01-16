@@ -43,9 +43,6 @@ from tau2.continual.evaluation.tool_analysis import (
     ToolPerformanceTracker,
 )
 
-# Baselines (example implementations)
-from tau2.continual.baselines.vanilla_finetune import VanillaFinetuneAgent
-from tau2.continual.baselines.icl_baseline import ICLBaselineAgent
 
 # Runner
 from tau2.continual.runner import ContinualBenchmarkRunner
@@ -73,8 +70,7 @@ __all__ = [
     "ToolCallEvaluation",
     "ToolPerformanceTracker",
     # Baselines
-    "VanillaFinetuneAgent",
-    "ICLBaselineAgent",
+    # (to be added in future iterations)
     # Runner
     "ContinualBenchmarkRunner",
 ]

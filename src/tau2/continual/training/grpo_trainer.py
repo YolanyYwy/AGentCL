@@ -1,17 +1,3 @@
-"""
-GRPO Continual Trainer
-
-A simple baseline trainer that uses Group Relative Policy Optimization (GRPO)
-for continual learning. This trainer performs full parameter updates after
-each experience (online learning mode).
-
-Key features:
-- Online learning: update after each experience
-- GRPO-based policy optimization
-- Full parameter updates (no LoRA/adapters)
-- Sequential domain training support
-"""
-
 import json
 import torch
 import torch.nn.functional as F
@@ -21,7 +7,7 @@ from dataclasses import dataclass, field
 
 from tau2.data_model.simulation import SimulationRun
 from tau2.data_model.message import Message, AssistantMessage
-from tau2.continual.training.data_converter import DataConverter
+#from tau2.continual.training.data_converter import DataConverter
 
 
 @dataclass
@@ -69,7 +55,7 @@ class GRPOContinualTrainer:
             config: Training configuration
         """
         self.config = config or GRPOTrainingConfig()
-        self.data_converter = DataConverter()
+        #self.data_converter = DataConverter()
 
         # Model components (loaded lazily)
         self.model = None
