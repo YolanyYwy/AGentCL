@@ -1,16 +1,3 @@
-"""
-GRPO Continual Learning Agent
-
-This module implements a continual learning agent that uses Group Relative
-Policy Optimization (GRPO) for full parameter updates.
-
-Key features:
-- Online learning: gradient update after each experience (not batched)
-- GRPO-based policy optimization
-- Full parameter updates (no LoRA/adapters)
-- Sequential domain training support
-"""
-
 import json
 import torch
 import torch.nn.functional as F

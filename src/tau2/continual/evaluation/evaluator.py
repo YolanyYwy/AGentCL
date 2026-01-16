@@ -116,21 +116,15 @@ class ContinualLearningEvaluator:
         self.training_tool_combinations: set[tuple[str, ...]] = set()
         self.training_param_values: dict[str, set[str]] = defaultdict(set)
 
-        # ICL baseline (if using ICL mode)
-        self.icl_baseline = None
-        if training_mode == TrainingMode.ICL:
-            from tau2.continual.training.icl_baseline import ICLContinualBaseline
-            self.icl_baseline = ICLContinualBaseline()
 
-        # GRPO agent (if using GRPO mode)
-        self.grpo_agent = None
+        # GRPO trainer (if using GRPO mode)
+        self.grpo_trainer = None
         if training_mode in (TrainingMode.GRPO, TrainingMode.GRPO_ONLINE):
-            from tau2.continual.baselines.grpo_agent import GRPOContinualAgent, GRPOConfig
-            grpo_config = GRPOConfig(
+            from tau2.continual.training.grpo_trainer import GRPOContinualTrainer, GRPOTrainingConfig
+            grpo_config = GRPOTrainingConfig(
                 model_name_or_path=agent_llm,
-                update_after_each_experience=(training_mode == TrainingMode.GRPO_ONLINE),
             )
-            self.grpo_agent = GRPOContinualAgent(config=grpo_config)
+            self.grpo_trainer = GRPOContinualTrainer(config=grpo_config)
 
     def set_tasks(self, tasks: list[Task]) -> None:
         """Set the tasks for evaluation."""
@@ -261,7 +255,6 @@ class ContinualLearningEvaluator:
             print(f"\n  Learning Phase: {len(stage.learning_tasks)} tasks")
 
         runs = []
-        experiences = []  # Collect experiences for batch learning modes
 
         for task_id in stage.learning_tasks:
             task = self.curriculum.get_task(task_id)
@@ -277,21 +270,18 @@ class ContinualLearningEvaluator:
                 self.tool_tracker.add_evaluations_from_run(run, task, stage.stage_id)
 
                 # For GRPO_ONLINE mode: update immediately after each experience
-                if self.training_mode == TrainingMode.GRPO_ONLINE and self.grpo_agent:
-                    experience = self._run_to_experience(run, task, stage.stage_id)
-                    update_stats = self.grpo_agent.learn_single_experience(experience, stage)
+                if self.training_mode == TrainingMode.GRPO_ONLINE and self.grpo_trainer:
+                    update_stats = self.grpo_trainer.train_on_experience(
+                        run, stage.stage_id
+                    )
                     if self.verbose and update_stats.get("status") == "updated":
                         print(f"    [GRPO] Updated after task {task_id}, "
                               f"loss: {update_stats.get('loss', 0):.4f}, "
                               f"total updates: {update_stats.get('total_updates', 0)}")
-                else:
-                    # Collect experience for batch learning
-                    experience = self._run_to_experience(run, task, stage.stage_id)
-                    experiences.append(experience)
 
-        # For batch GRPO mode: update after all experiences collected
-        if self.training_mode == TrainingMode.GRPO and self.grpo_agent and experiences:
-            learn_stats = self.grpo_agent.learn(stage, experiences)
+        # For batch GRPO mode: update after all runs collected
+        if self.training_mode == TrainingMode.GRPO and self.grpo_trainer:
+            learn_stats = self.grpo_trainer.train_stage(stage.stage_id, runs)
             if self.verbose:
                 print(f"    [GRPO] Batch update: {learn_stats.get('num_updates', 0)} updates, "
                       f"avg loss: {learn_stats.get('avg_loss', 0):.4f}")

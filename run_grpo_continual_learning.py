@@ -1,8 +1,21 @@
+"""
+Example script for running GRPO-based continual learning.
+
+This script demonstrates how to:
+1. Train a model sequentially across 3 domains
+2. Use GRPO for online policy optimization (update after each experience)
+3. Evaluate the model on each domain
+
+Usage:
+    python run_grpo_continual_learning.py --domains airline retail telecom
+    python run_grpo_continual_learning.py --model gpt2 --device cpu  # For testing
+"""
+
 import argparse
 import json
 from pathlib import Path
 
-from tau2.continual.baselines.grpo_agent import GRPOContinualAgent, GRPOConfig
+from tau2.continual.training.grpo_trainer import GRPOContinualTrainer, GRPOTrainingConfig
 from tau2.continual.evaluation.evaluator import ContinualLearningEvaluator
 from tau2.continual.curriculum.curriculum import Curriculum
 from tau2.continual.curriculum.stage import LearningStage
@@ -62,28 +75,10 @@ def create_domain_curriculum(
     )
 
 
-def load_domain_tasks(domain: str, data_dir: str = "data/tau2/domains") -> list[Task]:
-    """Load tasks for a specific domain."""
-    tasks_path = Path(data_dir) / domain / "tasks.json"
-
-    if not tasks_path.exists():
-        print(f"Warning: Tasks file not found at {tasks_path}")
-        return []
-
-    with open(tasks_path, "r") as f:
-        tasks_data = json.load(f)
-
-    tasks = []
-    for task_data in tasks_data:
-        task = Task.model_validate(task_data)
-        tasks.append(task)
-
-    return tasks
-
-
 def run_grpo_continual_learning(
     domains: list[str],
     model_name: str = "Qwen/Qwen2.5-7B-Instruct",
+    device: str = "auto",
     learning_rate: float = 1e-6,
     beta: float = 0.1,
     group_size: int = 4,
@@ -97,6 +92,7 @@ def run_grpo_continual_learning(
     Args:
         domains: List of domain names to train on sequentially
         model_name: HuggingFace model name or path
+        device: Device to use ('auto', 'cuda', 'cpu')
         learning_rate: Learning rate for GRPO
         beta: KL penalty coefficient
         group_size: Number of samples per prompt for GRPO
@@ -109,6 +105,7 @@ def run_grpo_continual_learning(
     print("=" * 60)
     print(f"Domains: {domains}")
     print(f"Model: {model_name}")
+    print(f"Device: {device}")
     print(f"Learning rate: {learning_rate}")
     print(f"Beta (KL penalty): {beta}")
     print(f"Group size: {group_size}")
@@ -116,52 +113,34 @@ def run_grpo_continual_learning(
     print("=" * 60)
 
     # Create GRPO config
-    grpo_config = GRPOConfig(
+    grpo_config = GRPOTrainingConfig(
         model_name_or_path=model_name,
+        device=device,
         learning_rate=learning_rate,
         beta=beta,
         group_size=group_size,
-        update_after_each_experience=online_mode,
-        save_every_n_updates=10,
+        output_dir=output_dir,
     )
 
-    # Create GRPO agent
-    print("\nInitializing GRPO agent...")
-    agent = GRPOContinualAgent(config=grpo_config)
+    # Create GRPO trainer
+    print("\nInitializing GRPO trainer...")
+    trainer = GRPOContinualTrainer(config=grpo_config)
+
+    # Load model
+    print("Loading model...")
+    trainer.load_model()
 
     # Create curriculum
     print("\nCreating curriculum...")
     curriculum = create_domain_curriculum(domains)
 
-    # Load tasks for all domains
-    print("\nLoading tasks...")
-    all_tasks = []
-    for domain in domains:
-        tasks = load_domain_tasks(domain)
-        all_tasks.extend(tasks)
-        print(f"  Loaded {len(tasks)} tasks from {domain}")
+    # Create dummy tasks for demonstration
+    print("\nCreating dummy tasks for demonstration...")
+    all_tasks = _create_dummy_tasks(domains)
 
-    if not all_tasks:
-        print("Warning: No tasks loaded. Using dummy tasks for demonstration.")
-        # Create dummy tasks for demonstration
-        all_tasks = _create_dummy_tasks(domains)
-
-    # Create evaluator
-    training_mode = TrainingMode.GRPO_ONLINE if online_mode else TrainingMode.GRPO
-    evaluator = ContinualLearningEvaluator(
-        curriculum=curriculum,
-        domain=domains[0],  # Primary domain
-        agent_llm=model_name,
-        user_llm="gpt-4",  # User simulator
-        training_mode=training_mode,
-        verbose=verbose,
-    )
-
-    # Set tasks
-    evaluator.set_tasks(all_tasks)
-
-    # Run evaluation
-    print("\nStarting continual learning...")
+    # Run training
+    print("\n" + "=" * 60)
+    print("Starting continual learning...")
     print("=" * 60)
 
     for stage_idx, stage in enumerate(curriculum.stages):
@@ -169,54 +148,39 @@ def run_grpo_continual_learning(
         print(f"Stage {stage_idx + 1}/{len(curriculum.stages)}: {stage.stage_name}")
         print(f"{'='*60}")
 
-        # Notify agent of stage start
-        agent.on_stage_start(stage)
+        # Create dummy runs for this stage
+        dummy_runs = _create_dummy_runs(stage.learning_tasks)
 
-        # Run learning phase with immediate updates
-        print(f"\n  Learning Phase: {len(stage.learning_tasks)} tasks")
-        for task_id in stage.learning_tasks:
-            task = curriculum.get_task(task_id)
-            if task is None:
-                continue
-
-            # Execute task (this would normally use run_task)
-            # For demonstration, we create a dummy experience
-            experience = _create_dummy_experience(task_id, stage.stage_id)
-
-            # Immediate GRPO update
-            if online_mode:
-                stats = agent.learn_single_experience(experience, stage)
+        if online_mode:
+            # Online mode: update after each experience
+            print(f"\n  Learning Phase (Online): {len(dummy_runs)} experiences")
+            for run in dummy_runs:
+                stats = trainer.train_on_experience(run, stage.stage_id)
                 if verbose and stats.get("status") == "updated":
-                    print(f"    Updated after {task_id}: "
-                          f"loss={stats.get('loss', 0):.4f}, "
-                          f"updates={stats.get('total_updates', 0)}")
+                    print(f"    Updated: loss={stats.get('loss', 0):.4f}, "
+                          f"total={stats.get('total_updates', 0)}")
+        else:
+            # Batch mode: update after all experiences
+            print(f"\n  Learning Phase (Batch): {len(dummy_runs)} experiences")
+            stats = trainer.train_stage(stage.stage_id, dummy_runs)
+            print(f"    Batch update: {stats.get('num_updates', 0)} updates, "
+                  f"avg_loss={stats.get('avg_loss', 0):.4f}")
 
-        # Batch update if not online mode
-        if not online_mode:
-            experiences = [
-                _create_dummy_experience(tid, stage.stage_id)
-                for tid in stage.learning_tasks
-            ]
-            stats = agent.learn(stage, experiences)
-            print(f"    Batch update: {stats.get('num_updates', 0)} updates")
-
-        # Notify agent of stage end
-        agent.on_stage_end(stage, {"evaluation": {"average_reward": 0.5}})
-
-        # Save checkpoint
-        checkpoint_path = Path(output_dir) / f"checkpoint_stage_{stage_idx}"
-        agent.save_checkpoint(str(checkpoint_path))
-        print(f"  Checkpoint saved to {checkpoint_path}")
+        # Save checkpoint after each stage
+        checkpoint_path = Path(output_dir) / f"stage_{stage.stage_id}"
+        trainer.save_checkpoint(str(checkpoint_path))
+        print(f"  Checkpoint saved: {checkpoint_path}")
 
         # Update reference model at end of each domain
-        agent.update_reference_model()
+        trainer.update_reference_model()
 
     print("\n" + "=" * 60)
     print("Training complete!")
-    print(f"Total updates: {agent.total_updates}")
+    print(f"Total updates: {trainer.total_updates}")
+    print(f"Stage updates: {trainer.stage_updates}")
     print("=" * 60)
 
-    return agent
+    return trainer
 
 
 def _create_dummy_tasks(domains: list[str]) -> list[Task]:
@@ -239,24 +203,25 @@ def _create_dummy_tasks(domains: list[str]) -> list[Task]:
     return tasks
 
 
-def _create_dummy_experience(task_id: str, stage_id: str):
-    """Create a dummy experience for demonstration."""
-    from tau2.continual.benchmark.agent_interface import Experience
+def _create_dummy_runs(task_ids: list[str]) -> list:
+    """Create dummy simulation runs for demonstration."""
+    from tau2.data_model.simulation import SimulationRun, RewardInfo
     from tau2.data_model.message import UserMessage, AssistantMessage
 
-    return Experience(
-        task_id=task_id,
-        messages=[
-            UserMessage(role="user", content="Hello, I need help."),
-            AssistantMessage(role="assistant", content="How can I help you?"),
-        ],
-        tool_calls=[],
-        tool_results=[],
-        reward=1.0,  # Successful experience
-        success=True,
-        expected_actions=[],
-        stage_id=stage_id,
-    )
+    runs = []
+    for task_id in task_ids:
+        run = SimulationRun(
+            task_id=task_id,
+            messages=[
+                UserMessage(role="user", content="Hello, I need help with my booking."),
+                AssistantMessage(role="assistant", content="I'd be happy to help you with your booking. Could you please provide your booking reference number?"),
+                UserMessage(role="user", content="My reference is ABC123."),
+                AssistantMessage(role="assistant", content="Thank you. I found your booking. How can I assist you today?"),
+            ],
+            reward_info=RewardInfo(reward=1.0, info={}),
+        )
+        runs.append(run)
+    return runs
 
 
 def main():
@@ -274,6 +239,13 @@ def main():
         type=str,
         default="Qwen/Qwen2.5-7B-Instruct",
         help="HuggingFace model name or path",
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        choices=["auto", "cuda", "cpu", "mps"],
+        help="Device to use",
     )
     parser.add_argument(
         "--learning-rate",
@@ -315,6 +287,7 @@ def main():
     run_grpo_continual_learning(
         domains=args.domains,
         model_name=args.model,
+        device=args.device,
         learning_rate=args.learning_rate,
         beta=args.beta,
         group_size=args.group_size,
