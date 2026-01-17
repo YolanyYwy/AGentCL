@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument(
         "--model-path",
         type=str,
-        default="Qwen/Qwen2.5-3B-Instruct",
+        default="Qwen/Qwen3-4B-Instruct",
         help="本地模型路径或 HuggingFace 模型名称"
     )
     parser.add_argument(

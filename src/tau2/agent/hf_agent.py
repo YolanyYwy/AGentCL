@@ -86,7 +86,7 @@ class HFAgent(LocalAgent[HFAgentState]):
         self,
         tools: List[Tool],
         domain_policy: str,
-        model_name_or_path: str = "Qwen/Qwen2.5-7B-Instruct",
+        model_name_or_path: str = "Qwen/Qwen3-4B-Instruct",
         device: str = "auto",
         torch_dtype: str = "auto",
         max_new_tokens: int = 512,

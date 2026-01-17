@@ -341,8 +341,8 @@ def main():
     continual_parser.add_argument(
         "--model-path",
         type=str,
-        default="Qwen/Qwen2.5-7B-Instruct",
-        help="HuggingFace model path (for hf_agent type). Default is 'Qwen/Qwen2.5-7B-Instruct'.",
+        default="Qwen/Qwen3-4B-Instruct",
+        help="HuggingFace model path (for hf_agent type). Default is 'Qwen/Qwen3-4B-Instruct'.",
     )
     continual_parser.add_argument(
         "--load-in-4bit",

@@ -41,7 +41,7 @@ class HFUserSimulator(UserSimulator):
         instructions: Optional[str] = None,
         llm: Optional[str] = None,  # Not used, kept for compatibility
         llm_args: Optional[dict] = None,
-        model_name_or_path: str = "Qwen/Qwen2.5-7B-Instruct",
+        model_name_or_path: str = "Qwen/Qwen3-4B-Instruct",
         device: str = "auto",
         torch_dtype: str = "auto",
         max_new_tokens: int = 512,
