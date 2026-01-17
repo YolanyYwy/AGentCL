@@ -66,7 +66,7 @@ def create_domain_curriculum(
 
 def run_grpo_continual_learning(
     domains: list[str],
-    model_name: str = "Qwen/Qwen3-4B-Instruct",
+    model_name: str = "Qwen/Qwen3-4B",
     device: str = "auto",
     learning_rate: float = 1e-6,
     beta: float = 0.1,
@@ -234,7 +234,7 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="Qwen/Qwen3-4B-Instruct",
+        default="Qwen/Qwen3-4B",
         help="HuggingFace model name or path",
     )
     parser.add_argument(

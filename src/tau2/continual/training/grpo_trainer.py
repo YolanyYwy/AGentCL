@@ -14,7 +14,7 @@ from tau2.data_model.message import Message, AssistantMessage
 class GRPOTrainingConfig:
     """Configuration for GRPO training."""
     # Model
-    model_name_or_path: str = "Qwen/Qwen3-4B-Instruct"
+    model_name_or_path: str = "Qwen/Qwen3-4B"
     device: str = "auto"  # auto, cuda, cpu
     torch_dtype: str = "auto"  # auto, float16, bfloat16, float32
 
