@@ -3,18 +3,19 @@
 
 compute_environment: LOCAL_MACHINE
 
-# 分布式训练类型
-distributed_type: MULTI_GPU  # 或 NO (单 GPU), DEEPSPEED, FSDP
+# 分布式训练类型 - 单 GPU 模式
+distributed_type: NO  # 单 GPU 模式,不使用分布式
 
 # GPU 配置
-num_processes: 2  # 使用的 GPU 数量
-gpu_ids: all  # 使用所有 GPU，或指定 [0,1,2]
+num_processes: 1  # 单进程
+gpu_ids: [0]  # 只使用第一个 GPU
+main_process_port: 29500  # 主进程端口
 
 # 混合精度
 mixed_precision: bf16  # fp16, bf16, 或 no
 
 # 梯度累积
-gradient_accumulation_steps: 1
+gradient_accumulation_steps: 4  # 增加梯度累积步数以补偿 batch size
 
 # 其他设置
 use_cpu: false

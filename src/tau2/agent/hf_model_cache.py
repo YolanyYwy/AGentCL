@@ -88,8 +88,22 @@ class HFModelCache:
         # Prepare model loading kwargs
         model_kwargs = {
             "trust_remote_code": trust_remote_code,
-            "device_map": device,
         }
+
+        # Handle device mapping carefully to avoid multi-GPU distribution
+        # When device is "auto", use single GPU (cuda:0) instead of distributing across all GPUs
+        if device == "auto":
+            # Check if CUDA is available
+            import torch
+            if torch.cuda.is_available():
+                # Use only the first GPU to avoid OOM from multi-GPU distribution
+                model_kwargs["device_map"] = {"": 0}  # Force all layers to GPU 0
+            else:
+                model_kwargs["device_map"] = "cpu"
+        elif device in ["cuda", "cuda:0"]:
+            model_kwargs["device_map"] = {"": 0}  # Force all layers to GPU 0
+        else:
+            model_kwargs["device_map"] = device
 
         if dtype != "auto":
             model_kwargs["torch_dtype"] = dtype

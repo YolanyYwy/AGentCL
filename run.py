@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-三域持续学习训练脚本
 按照 Airline → Retail → Telecom 顺序进行持续学习训练
 并计算前向迁移（Forward Transfer）和后向迁移（Backward Transfer）指标
 """
@@ -26,7 +25,6 @@ from tau2.continual.curriculum.stage import LearningStage
 from tau2.continual.evaluation.evaluator import ContinualLearningEvaluator
 from tau2.continual.evaluation.metrics import compute_continual_metrics
 from tau2.data_model.continual_results import TrainingMode, ContinualLearningResults
-from tau2.run import load_tasks
 from loguru import logger
 
 
@@ -183,7 +181,7 @@ def run_three_domain_training(
     output_path.mkdir(parents=True, exist_ok=True)
 
     # 创建课程
-    print("📚 创建课程...")
+    print(" 创建课程...")
     curriculum = create_three_domain_curriculum(
         airline_tasks_path=airline_tasks_path,
         retail_tasks_path=retail_tasks_path,
@@ -195,35 +193,50 @@ def run_three_domain_training(
     # 保存课程配置
     curriculum_path = output_path / "curriculum.json"
     curriculum.to_json(curriculum_path)
-    print(f"✅ 课程已保存: {curriculum_path}")
+    print(f"课程已保存: {curriculum_path}")
     print()
 
     # 加载所有任务
-    print("📥 加载任务数据...")
+    print(" 加载任务数据...")
     all_tasks = {}
+
+    # 导入 Task 类
+    from tau2.data_model.tasks import Task
 
     with open(airline_tasks_path, 'r', encoding='utf-8') as f:
         airline_tasks = json.load(f)[:tasks_per_domain]
-        for task in airline_tasks:
-            all_tasks[task['id']] = task
+        for task_dict in airline_tasks:
+            try:
+                task = Task(**task_dict)  # 转换为 Task 对象
+                all_tasks[task.id] = task
+            except Exception as e:
+                logger.warning(f"跳过无效任务: {e}")
 
     with open(retail_tasks_path, 'r', encoding='utf-8') as f:
         retail_tasks = json.load(f)[:tasks_per_domain]
-        for task in retail_tasks:
-            all_tasks[task['id']] = task
+        for task_dict in retail_tasks:
+            try:
+                task = Task(**task_dict)  # 转换为 Task 对象
+                all_tasks[task.id] = task
+            except Exception as e:
+                logger.warning(f"跳过无效任务: {e}")
 
     with open(telecom_tasks_path, 'r', encoding='utf-8') as f:
         telecom_tasks = json.load(f)[:tasks_per_domain]
-        for task in telecom_tasks:
-            all_tasks[task['id']] = task
+        for task_dict in telecom_tasks:
+            try:
+                task = Task(**task_dict)  # 转换为 Task 对象
+                all_tasks[task.id] = task
+            except Exception as e:
+                logger.warning(f"跳过无效任务: {e}")
 
-    print(f"✅ 总任务数: {len(all_tasks)}")
+    print(f"总任务数: {len(all_tasks)}")
     print()
 
     # 初始化 GRPO 训练器（如果使用）
     trainer = None
     if use_grpo:
-        print("🔧 初始化 GRPO 训练器...")
+        print(" 初始化 GRPO 训练器...")
         grpo_config = GRPOTrainingConfig(
             model_name_or_path=model_name,
             device=device,
@@ -238,7 +251,7 @@ def run_three_domain_training(
         print()
 
     # 创建评估器
-    print("🔧 初始化评估器...")
+    print(" 初始化评估器...")
     evaluator = ContinualLearningEvaluator(
         curriculum=curriculum,
         domain="multi_domain",
@@ -248,11 +261,11 @@ def run_three_domain_training(
         user_type='hf_user_simulator' if use_grpo else 'user_simulator',
         llm_args_agent={
             'model_name_or_path': model_name,
-            'load_in_4bit': False,
+            'load_in_4bit': True,  # 启用 4-bit 量化以节省显存
         } if use_grpo else {},
         llm_args_user={
             'model_name_or_path': model_name,
-            'load_in_4bit': False,
+            'load_in_4bit': True,  # 启用 4-bit 量化以节省显存
         } if use_grpo else {},
         max_steps=30,
         max_errors=5,
@@ -263,12 +276,12 @@ def run_three_domain_training(
 
     # 设置任务
     evaluator.set_tasks(list(all_tasks.values()))
-    print("✅ 评估器已初始化")
+    print("评估器已初始化")
     print()
 
     # 运行持续学习训练
     print("=" * 80)
-    print("🚀 开始持续学习训练...")
+    print(" 开始持续学习训练...")
     print("=" * 80)
     print()
 
@@ -283,7 +296,7 @@ def run_three_domain_training(
 
     for stage_idx, stage in enumerate(curriculum.stages):
         print(f"\n{'='*80}")
-        print(f"📍 {stage.stage_name} ({stage_idx + 1}/{len(curriculum.stages)})")
+        print(f" {stage.stage_name} ({stage_idx + 1}/{len(curriculum.stages)})")
         print(f"{'='*80}")
         print(f"学习任务: {len(stage.learning_tasks)}")
         print(f"评估任务: {len(stage.eval_tasks)}")
@@ -291,41 +304,33 @@ def run_three_domain_training(
         print()
 
         # 1. 学习阶段
+        learning_runs = []
         if use_grpo and trainer and stage.learning_tasks:
-            print(f"📖 学习阶段: 在 {len(stage.learning_tasks)} 个任务上训练...")
+            print(f" 学习阶段: 在 {len(stage.learning_tasks)} 个任务上训练...")
 
             # 运行学习任务并收集轨迹
-            learning_runs = evaluator._run_tasks(
-                task_ids=stage.learning_tasks,
-                num_trials=stage.num_learning_trials,
-                stage_id=stage.stage_id,
-                phase="learning",
-            )
+            learning_runs = evaluator._run_learning_phase(stage)
 
-            # 使用 GRPO 训练
-            for run in learning_runs:
-                if run.reward_info and run.reward_info.reward > 0:
-                    stats = trainer.train_on_experience(run, stage.stage_id)
-                    if verbose and stats.get("status") == "updated":
-                        print(f"  ✓ 更新: loss={stats.get('loss', 0):.4f}, total={stats.get('total_updates', 0)}")
+            # 使用 GRPO 训练（如果 evaluator 没有自动训练）
+            if evaluator.training_mode == TrainingMode.NONE:
+                for run in learning_runs:
+                    if run.reward_info and run.reward_info.reward > 0:
+                        stats = trainer.train_on_experience(run, stage.stage_id)
+                        if verbose and stats.get("status") == "updated":
+                            print(f"  ✓ 更新: loss={stats.get('loss', 0):.4f}, total={stats.get('total_updates', 0)}")
 
-            # 保存检查点
-            checkpoint_path = output_path / "grpo_checkpoints" / f"stage_{stage.stage_id}"
-            trainer.save_checkpoint(str(checkpoint_path))
-            print(f"  💾 检查点已保存: {checkpoint_path}")
+                # 保存检查点
+                checkpoint_path = output_path / "grpo_checkpoints" / f"stage_{stage.stage_id}"
+                trainer.save_checkpoint(str(checkpoint_path))
+                print(f"   检查点已保存: {checkpoint_path}")
 
-            # 更新参考模型
-            trainer.update_reference_model()
-            print(f"  🔄 参考模型已更新")
+                # 更新参考模型
+                trainer.update_reference_model()
+                print(f"   参考模型已更新")
 
         # 2. 评估阶段
-        print(f"\n📊 评估阶段: 在 {len(stage.eval_tasks)} 个任务上评估...")
-        eval_runs = evaluator._run_tasks(
-            task_ids=stage.eval_tasks,
-            num_trials=stage.num_eval_trials,
-            stage_id=stage.stage_id,
-            phase="eval",
-        )
+        print(f"\n 评估阶段: 在 {len(stage.eval_tasks)} 个任务上评估...")
+        eval_runs = evaluator._run_evaluation_phase(stage)
 
         eval_reward = sum(r.reward_info.reward for r in eval_runs if r.reward_info) / len(eval_runs) if eval_runs else 0.0
         print(f"  评估奖励: {eval_reward:.4f}")
@@ -334,13 +339,8 @@ def run_three_domain_training(
         retention_runs = []
         retention_reward = 0.0
         if stage.retention_tasks:
-            print(f"\n🔄 保留任务评估: 在 {len(stage.retention_tasks)} 个任务上评估...")
-            retention_runs = evaluator._run_tasks(
-                task_ids=stage.retention_tasks,
-                num_trials=stage.num_eval_trials,
-                stage_id=stage.stage_id,
-                phase="retention",
-            )
+            print(f"\n 保留任务评估: 在 {len(stage.retention_tasks)} 个任务上评估...")
+            retention_runs = evaluator._run_retention_phase(stage)
             retention_reward = sum(r.reward_info.reward for r in retention_runs if r.reward_info) / len(retention_runs) if retention_runs else 0.0
             print(f"  保留任务奖励: {retention_reward:.4f}")
 
@@ -360,14 +360,14 @@ def run_three_domain_training(
         )
         results.stage_results.append(stage_result)
 
-        print(f"\n✅ {stage.stage_name} 完成")
+        print(f"\n{stage.stage_name} 完成")
 
     # 完成训练
     results.end_time = datetime.now().isoformat()
 
     # 计算持续学习指标
     print("\n" + "=" * 80)
-    print("📈 计算持续学习指标...")
+    print(" 计算持续学习指标...")
     print("=" * 80)
 
     metrics = compute_continual_metrics(results)
@@ -379,15 +379,15 @@ def run_three_domain_training(
     results_path = output_path / "results.json"
     with open(results_path, 'w', encoding='utf-8') as f:
         json.dump(results.to_dict(), f, indent=2, ensure_ascii=False)
-    print(f"\n💾 结果已保存: {results_path}")
+    print(f"\n 结果已保存: {results_path}")
 
     metrics_path = output_path / "metrics.json"
     with open(metrics_path, 'w', encoding='utf-8') as f:
         json.dump(metrics.to_dict(), f, indent=2, ensure_ascii=False)
-    print(f"💾 指标已保存: {metrics_path}")
+    print(f" 指标已保存: {metrics_path}")
 
     print("\n" + "=" * 80)
-    print("🎉 三域持续学习训练完成！")
+    print(" 三域持续学习训练完成！")
     print("=" * 80)
 
     return results, metrics
@@ -506,7 +506,7 @@ def main():
             verbose=not args.quiet,
         )
 
-        print("\n✅ 训练成功完成！")
+        print("\n训练成功完成！")
         print(f"\n关键指标:")
         print(f"  平均奖励: {metrics.average_reward:.4f}")
         print(f"  前向迁移: {metrics.forward_transfer:.4f}")
@@ -516,7 +516,7 @@ def main():
         return 0
 
     except Exception as e:
-        print(f"\n❌ 训练失败: {e}")
+        print(f"\n 训练失败: {e}")
         import traceback
         traceback.print_exc()
         return 1
