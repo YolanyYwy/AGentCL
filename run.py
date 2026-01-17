@@ -15,7 +15,12 @@ from datetime import datetime
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root / "src"))
 
-from tau2.continual.training.grpo_trainer import GRPOContinualTrainer, GRPOTrainingConfig
+# 使用 Accelerate 版本的 GRPO Trainer
+try:
+    from tau2.continual.training.grpo_trainer_accelerate import GRPOContinualTrainer, GRPOTrainingConfig
+except ImportError:
+    print("使用原始版本")
+    from tau2.continual.training.grpo_trainer import GRPOContinualTrainer, GRPOTrainingConfig
 from tau2.continual.curriculum.curriculum import Curriculum
 from tau2.continual.curriculum.stage import LearningStage
 from tau2.continual.evaluation.evaluator import ContinualLearningEvaluator
