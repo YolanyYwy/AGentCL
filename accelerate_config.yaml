@@ -1,0 +1,21 @@
+# Accelerate 配置文件
+# 使用方法: accelerate launch --config_file accelerate_config.yaml your_script.py
+
+compute_environment: LOCAL_MACHINE
+
+# 分布式训练类型
+distributed_type: MULTI_GPU  # 或 NO (单 GPU), DEEPSPEED, FSDP
+
+# GPU 配置
+num_processes: 2  # 使用的 GPU 数量
+gpu_ids: all  # 使用所有 GPU，或指定 [0,1,2]
+
+# 混合精度
+mixed_precision: bf16  # fp16, bf16, 或 no
+
+# 梯度累积
+gradient_accumulation_steps: 1
+
+# 其他设置
+use_cpu: false
+dynamo_backend: "NO"  # 不使用 torch.compile
