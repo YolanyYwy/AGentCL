@@ -89,7 +89,7 @@ class HFAgent(LocalAgent[HFAgentState]):
         model_name_or_path: str = "Qwen/Qwen3-4B",
         device: str = "auto",
         torch_dtype: str = "auto",
-        max_new_tokens: int = 512,
+        max_new_tokens: int = 1024,  # Increased from 512 to allow longer responses
         temperature: float = 0.7,
         do_sample: bool = True,
         trust_remote_code: bool = True,
@@ -258,6 +258,20 @@ class HFAgent(LocalAgent[HFAgentState]):
             tool_calls=None,
         )
 
+    def _clean_response(self, text: str) -> str:
+        """
+        Clean up the model response by removing think tags.
+
+        Args:
+            text: Raw model output
+
+        Returns:
+            Cleaned text
+        """
+        # Remove <think>...</think> tags and their content
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+        return text.strip()
+
     def generate_next_message(
         self, message: ValidAgentInputMessage, state: HFAgentState
     ) -> tuple[AssistantMessage, HFAgentState]:
@@ -304,6 +318,13 @@ class HFAgent(LocalAgent[HFAgentState]):
         # Decode only the new tokens
         new_tokens = outputs[0][inputs['input_ids'].shape[1]:]
         response_text = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+
+        logger.debug(f"[HFAgent] Raw response: {response_text[:200]}...")  # Log first 200 chars
+
+        # Clean up the response: remove <think> tags
+        response_text = self._clean_response(response_text)
+
+        logger.debug(f"[HFAgent] Cleaned response: {response_text}")
 
         # Parse response
         assistant_message = self._parse_response(response_text)

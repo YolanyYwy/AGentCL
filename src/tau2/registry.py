@@ -44,6 +44,7 @@ from tau2.environment.environment import Environment
 from tau2.user.base import BaseUser
 from tau2.user.user_simulator import DummyUser, UserSimulator
 from tau2.user.hf_user_simulator import HFUserSimulator
+from tau2.user.openai_user_simulator import OpenAIUserSimulator
 
 
 class RegistryInfo(BaseModel):
@@ -209,6 +210,7 @@ try:
     registry.register_user(UserSimulator, "user_simulator")
     registry.register_user(DummyUser, "dummy_user")
     registry.register_user(HFUserSimulator, "hf_user_simulator")
+    registry.register_user(OpenAIUserSimulator, "openai_user_simulator")
     registry.register_agent(LLMAgent, "llm_agent")
     registry.register_agent(LLMGTAgent, "llm_agent_gt")
     registry.register_agent(LLMSoloAgent, "llm_agent_solo")

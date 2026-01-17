@@ -44,7 +44,7 @@ class HFUserSimulator(UserSimulator):
         model_name_or_path: str = "Qwen/Qwen3-4B",
         device: str = "auto",
         torch_dtype: str = "auto",
-        max_new_tokens: int = 512,
+        max_new_tokens: int = 1024,  # Increased from 512 to allow longer responses
         temperature: float = 0.7,
         do_sample: bool = True,
         trust_remote_code: bool = True,
@@ -119,7 +119,9 @@ class HFUserSimulator(UserSimulator):
 
             # Map roles
             if role == "system":
-                formatted.append({"role": "system", "content": content})
+                # Add instruction to output plain text only
+                system_content = content + "\n\nIMPORTANT: Respond with plain text only. Do NOT use <think> tags or JSON format. Just write your message naturally as a customer would."
+                formatted.append({"role": "system", "content": system_content})
             elif role == "user":
                 formatted.append({"role": "user", "content": content})
             elif role == "assistant":
@@ -182,7 +184,12 @@ class HFUserSimulator(UserSimulator):
         new_tokens = outputs[0][inputs['input_ids'].shape[1]:]
         response_text = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
 
-        logger.debug(f"[HFUserSimulator] Response: {response_text}")
+        logger.debug(f"[HFUserSimulator] Raw response: {response_text[:200]}...")  # Log first 200 chars
+
+        # Clean up the response: remove <think> tags and extract content
+        response_text = self._clean_response(response_text)
+
+        logger.debug(f"[HFUserSimulator] Cleaned response: {response_text}")
 
         # Create user message
         user_message = UserMessage(
@@ -222,6 +229,40 @@ class HFUserSimulator(UserSimulator):
                 pass
 
         return None
+
+    def _clean_response(self, text: str) -> str:
+        """
+        Clean up the model response by removing think tags and extracting actual content.
+
+        Args:
+            text: Raw model output
+
+        Returns:
+            Cleaned text suitable for user message
+        """
+        # Remove <think>...</think> tags and their content
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+
+        # Try to extract content from JSON format
+        json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+        if json_match:
+            try:
+                data = json.loads(json_match.group(1))
+                if "content" in data:
+                    return data["content"]
+            except json.JSONDecodeError:
+                pass
+
+        # Try to find {"content": "..."} pattern
+        content_match = re.search(r'\{\s*"content"\s*:\s*"([^"]+)"\s*\}', text)
+        if content_match:
+            return content_match.group(1)
+
+        # Clean up any remaining JSON artifacts
+        text = re.sub(r'```json\s*', '', text)
+        text = re.sub(r'```\s*', '', text)
+
+        return text.strip()
 
     def set_seed(self, seed: int):
         """Set the seed for generation."""

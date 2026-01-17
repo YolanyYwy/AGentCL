@@ -143,6 +143,9 @@ def run_three_domain_training(
     output_dir: str = "./three_domain_results",
     use_grpo: bool = True,
     verbose: bool = True,
+    openai_api_base: str = None,
+    openai_api_key: str = None,
+    openai_model: str = "gpt-4o-mini",
 ):
     """
     运行三域持续学习训练
@@ -252,21 +255,34 @@ def run_three_domain_training(
 
     # 创建评估器
     print(" 初始化评估器...")
+
+    # 配置 OpenAI User Simulator 参数
+    user_llm_args = {
+        'temperature': 0.7,
+        'max_tokens': 1024,
+    }
+
+    # 如果提供了自定义 API 配置，添加到参数中
+    if openai_api_base:
+        user_llm_args['api_base'] = openai_api_base
+        print(f"使用自定义 API Base: {openai_api_base}")
+
+    if openai_api_key:
+        user_llm_args['api_key'] = openai_api_key
+        print("使用自定义 API Key")
+
     evaluator = ContinualLearningEvaluator(
         curriculum=curriculum,
         domain="multi_domain",
         agent_llm=None,  # 使用本地模型
-        user_llm=None,
+        user_llm=openai_model,  # 使用 OpenAI API 作为 User
         agent_type='hf_agent' if use_grpo else 'llm_agent',
-        user_type='hf_user_simulator' if use_grpo else 'user_simulator',
+        user_type='openai_user_simulator',  # 使用 OpenAI User Simulator
         llm_args_agent={
             'model_name_or_path': model_name,
             'load_in_4bit': True,  # 启用 4-bit 量化以节省显存
         } if use_grpo else {},
-        llm_args_user={
-            'model_name_or_path': model_name,
-            'load_in_4bit': True,  # 启用 4-bit 量化以节省显存
-        } if use_grpo else {},
+        llm_args_user=user_llm_args,  # OpenAI API 参数
         max_steps=30,
         max_errors=5,
         seed=42,
@@ -485,6 +501,26 @@ def main():
         help="静默模式",
     )
 
+    # OpenAI API 配置（用于中转 API）
+    parser.add_argument(
+        "--openai-api-base",
+        type=str,
+        default=None,
+        help="OpenAI API 中转地址 (例如: https://api.lingleap.com/v1)",
+    )
+    parser.add_argument(
+        "--openai-api-key",
+        type=str,
+        default=None,
+        help="OpenAI API Key (如果不设置则使用环境变量 OPENAI_API_KEY)",
+    )
+    parser.add_argument(
+        "--openai-model",
+        type=str,
+        default="gpt-4o-mini",
+        help="OpenAI 模型名称 (例如: gpt-4o-mini, gpt-5)",
+    )
+
     args = parser.parse_args()
 
     # 处理 no-grpo 标志
@@ -504,6 +540,9 @@ def main():
             output_dir=args.output_dir,
             use_grpo=use_grpo,
             verbose=not args.quiet,
+            openai_api_base=args.openai_api_base,
+            openai_api_key=args.openai_api_key,
+            openai_model=args.openai_model,
         )
 
         print("\n训练成功完成！")
